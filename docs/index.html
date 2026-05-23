@@ -1,0 +1,1589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+
+
+<!-- META INJECTION START -->
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="copyright" content="bugfish">
+<meta name="language" content="en">
+<meta name="robots" content="index,follow">
+<meta name="author" content="bugfish, ynvnzmlzaa@gmail.com">
+<meta name="description" content="Interactive 2D JavaScript N-body simulator with real-time gravity, orbital motion, and adjustable parameters for exploring complex particle systems.">
+<meta property="og:title" content="Markdown Editor">
+<meta property="og:description" content="Interactive 2D JavaScript N-body simulator with real-time gravity, orbital motion, and adjustable parameters for exploring complex particle systems.">
+<meta property="og:image" content="/meta.jpg">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://bugfishtm.github.io/js-markdown-editor/">
+<script type="application/ld+json">
+{
+  "@context": "http://schema.org",
+  "@type": "WebSite",
+  "name": "N-Body Simulator",
+  "url": "https://bugfishtm.github.io/js-markdown-editor/"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "http://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "N-Body Simulator",
+  "headline": "N-Body Simulator 2D",
+  "description": "Interactive 2D JavaScript N-body simulator with real-time gravity, orbital motion, and adjustable parameters for exploring complex particle systems.",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Any (browser-based)",
+  "datePublished": "2026-05-23",
+  "dateModified": "2026-05-23",
+  "author": {
+    "@type": "Person",
+    "name": "Jan-Maurice Dahlmanns"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Bugfish",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "/logo.jpg"
+    }
+  }
+}
+</script>
+<!-- META INJECTION END -->
+
+
+<title>N-Body Simulator</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#07090d;--panel:#0d1018;--panel2:#111620;--border:#1a2230;--border2:#243040;
+  --text:#b8c8d8;--text2:#4a6080;--text3:#2a3848;
+  --accent:#e07818;--accent2:#ff9a30;--accentd:rgba(224,120,24,.15);--accentg:rgba(224,120,24,.07);
+  --green:#10e87a;--cyan:#10cce8;--warn:#e8a818;--err:#e83020;
+  --r:5px;--tr:160ms ease;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'Courier New',monospace;font-size:12px}
+#app{display:flex;height:100vh}
+
+/* PANEL */
+#panel{width:290px;min-width:260px;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
+#ph{padding:10px 13px 8px;border-bottom:1px solid var(--border);background:linear-gradient(160deg,#0d1018,#111825)}
+#ph h1{font-size:12px;font-weight:700;color:var(--accent);letter-spacing:2.5px;text-transform:uppercase}
+#ph p{font-size:9px;color:var(--text2);margin-top:2px;letter-spacing:.5px}
+#pb{flex:1;overflow-y:auto;padding:7px;display:flex;flex-direction:column;gap:7px}
+#pb::-webkit-scrollbar{width:3px}
+#pb::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+/* SECTIONS */
+.sec{background:var(--panel2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.sh{padding:6px 10px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none;font-size:9px;font-weight:700;letter-spacing:1.8px;color:var(--text2);text-transform:uppercase;border-bottom:1px solid transparent;transition:background var(--tr),color var(--tr)}
+.sh:hover,.sh.open{color:var(--accent)}
+.sh.open{border-bottom-color:var(--border)}
+.sh .arr{font-size:7px;transition:transform var(--tr)}
+.sh.open .arr{transform:rotate(180deg)}
+.sc{padding:9px 10px;display:flex;flex-direction:column;gap:6px}
+.sc.closed{display:none}
+
+/* FORMS */
+label{display:block;font-size:9px;color:var(--text2);margin-bottom:2px;letter-spacing:.4px}
+input[type=text],input[type=number],select{
+  width:100%;background:var(--bg);border:1px solid var(--border);border-radius:3px;
+  color:var(--text);padding:4px 6px;font-size:11px;font-family:'Courier New',monospace;
+  outline:none;transition:border-color var(--tr),box-shadow var(--tr)}
+input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 2px var(--accentd)}
+select option{background:var(--panel)}
+input[type=range]{width:100%;-webkit-appearance:none;height:3px;background:var(--border2);border-radius:2px;outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;height:11px;border-radius:50%;background:var(--accent);border:2px solid var(--bg);cursor:pointer}
+input[type=color]{width:28px;height:22px;padding:1px;border-radius:3px;border:1px solid var(--border);cursor:pointer;background:var(--bg)}
+input[type=checkbox]{width:13px;height:13px;accent-color:var(--accent);cursor:pointer;flex-shrink:0}
+.row{display:flex;gap:5px;align-items:center}
+.row>label{margin:0;flex-shrink:0;white-space:nowrap}
+.col2{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.fld{display:flex;flex-direction:column;gap:2px}
+.sr{display:flex;flex-direction:column;gap:2px}
+.sv{font-size:9px;color:var(--accent);font-weight:700;text-align:right;letter-spacing:.3px}
+
+/* BUTTONS */
+.btn{padding:4px 9px;border-radius:3px;border:none;cursor:pointer;font-size:10px;font-weight:700;font-family:'Courier New',monospace;transition:background var(--tr),transform 60ms,box-shadow var(--tr);white-space:nowrap;letter-spacing:.3px}
+.btn:active{transform:scale(.95)}
+.bp{background:var(--accent);color:#000}.bp:hover{background:var(--accent2);box-shadow:0 0 10px rgba(224,120,24,.4)}
+.bs{background:var(--bg);color:var(--text);border:1px solid var(--border2)}.bs:hover{border-color:var(--accent);color:var(--accent)}
+.bd{background:rgba(232,48,32,.1);color:var(--err);border:1px solid rgba(232,48,32,.25)}.bd:hover{background:rgba(232,48,32,.2)}
+.bg2{background:rgba(16,232,122,.1);color:var(--green);border:1px solid rgba(16,232,122,.25)}
+.bi{width:25px;height:25px;display:inline-flex;align-items:center;justify-content:center;padding:0;font-size:13px;flex-shrink:0}
+.br{display:flex;gap:4px;flex-wrap:wrap}
+
+/* PLAYBACK */
+#playbar{display:flex;align-items:center;gap:4px}
+#tdisp{flex:1;text-align:right;font-size:9px;color:var(--text2);font-family:'Courier New',monospace}
+
+/* SPEED DISPLAY */
+#spd-box{background:var(--bg);border:1px solid var(--border);border-radius:3px;padding:5px 7px;font-size:9px;color:var(--text2);font-family:'Courier New',monospace;line-height:1.7}
+#spd-box .hv{color:var(--accent);font-weight:700}
+
+/* BODY LIST */
+#blist{display:flex;flex-direction:column;gap:3px;max-height:200px;overflow-y:auto;padding-right:1px}
+#blist::-webkit-scrollbar{width:3px}
+#blist::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.bi2{display:flex;align-items:center;gap:5px;padding:4px 6px;border-radius:3px;border:1px solid transparent;background:rgba(255,255,255,.02);cursor:pointer;transition:border-color var(--tr),background var(--tr)}
+.bi2:hover{border-color:var(--border2);background:rgba(255,255,255,.04)}
+.bi2.sel{border-color:var(--accent);background:var(--accentd)}
+.bsw{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.bnm{font-size:10px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+.bms{font-size:8px;color:var(--text2)}
+.bac{display:flex;gap:2px}
+
+/* SELECTED INFO */
+#selinfo{background:var(--accentg);border:1px solid var(--border2);border-radius:3px;padding:7px;font-size:9px;font-family:'Courier New',monospace;display:flex;flex-direction:column;gap:2px}
+.sir{display:flex;justify-content:space-between;align-items:baseline}
+.sil{color:var(--text2)}
+.siv{color:var(--text)}
+.sih{font-size:10px;font-weight:700;color:var(--accent);padding-bottom:3px;border-bottom:1px solid var(--border);margin-bottom:2px}
+
+/* METRICS */
+.mr{display:flex;justify-content:space-between;align-items:baseline}
+.ml{font-size:9px;color:var(--text2)}
+.mv{font-size:9px;font-family:'Courier New',monospace}
+.mv.g{color:var(--green)}.mv.w{color:var(--warn)}.mv.e{color:var(--err)}.mv.n{color:var(--text)}
+
+/* PRESETS */
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:3px}
+.pb{font-size:9px;padding:5px 4px;text-align:center;letter-spacing:0}
+
+/* CANVAS */
+#cw{flex:1;position:relative;overflow:hidden}
+#tc,#cv{position:absolute;top:0;left:0;display:block}
+#cv{cursor:crosshair}
+
+/* HUD */
+#hud{position:absolute;top:8px;right:8px;display:flex;flex-direction:column;align-items:flex-end;gap:4px;pointer-events:none}
+.hb{background:rgba(7,9,13,.88);border:1px solid var(--border2);border-radius:3px;padding:3px 7px;font-size:9px;color:var(--text2);font-family:'Courier New',monospace;backdrop-filter:blur(4px)}
+.hb .hv{color:var(--accent);font-weight:700}
+
+/* STATUSBAR */
+#sb{position:absolute;bottom:8px;left:8px;background:rgba(7,9,13,.88);border:1px solid var(--border2);border-radius:3px;padding:3px 8px;font-size:9px;color:var(--text2);font-family:'Courier New',monospace;pointer-events:none;backdrop-filter:blur(4px);max-width:600px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* CANVAS BTNS */
+#cbtns{position:absolute;bottom:8px;right:8px;display:flex;gap:3px}
+.cb{background:rgba(7,9,13,.88);border:1px solid var(--border2);color:var(--text);backdrop-filter:blur(4px)}
+.cb:hover{border-color:var(--accent);color:var(--accent)}
+
+/* TOOLTIP */
+.tip{position:relative;display:inline-flex;align-items:center}
+.tic{width:12px;height:12px;border-radius:50%;background:var(--accentd);border:1px solid var(--accent);font-size:8px;cursor:help;display:inline-flex;align-items:center;justify-content:center;color:var(--accent);flex-shrink:0;margin-left:3px}
+.tib{display:none;position:absolute;left:16px;top:-4px;background:var(--panel2);border:1px solid var(--border2);border-radius:4px;padding:6px 8px;width:190px;font-size:9px;color:var(--text);line-height:1.5;z-index:999;white-space:normal;box-shadow:0 4px 20px rgba(0,0,0,.7)}
+.tip:hover .tib{display:block}
+
+/* MODALS */
+.mbg{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px)}
+.mbg.hidden{display:none}
+.mo{background:var(--panel);border:1px solid var(--border2);border-radius:8px;padding:16px;width:420px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 80px rgba(0,0,0,.8),0 0 30px rgba(224,120,24,.04);display:flex;flex-direction:column;gap:10px;font-family:'Courier New',monospace}
+.mo h2{font-size:13px;font-weight:700;color:var(--accent);letter-spacing:1px}
+.mf{display:flex;gap:5px;justify-content:flex-end;margin-top:4px}
+.mg{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.mt{font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;font-weight:700}
+hr.ms{border:none;border-top:1px solid var(--border)}
+.tabr{display:flex;border:1px solid var(--border);border-radius:3px;overflow:hidden}
+.tabb{flex:1;padding:4px 5px;background:transparent;border:none;color:var(--text2);cursor:pointer;font-size:9px;font-family:'Courier New',monospace;font-weight:700;letter-spacing:.3px;transition:background var(--tr),color var(--tr)}
+.tabb.on{background:var(--accent);color:#000}
+.cps{display:flex;gap:3px;flex-wrap:wrap;margin-top:3px}
+.cp{width:14px;height:14px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:border-color var(--tr),transform var(--tr)}
+.cp:hover,.cp.on{border-color:#fff;transform:scale(1.1)}
+.ban{padding:6px 8px;border-radius:3px;font-size:9px;line-height:1.5}
+.ban.w{background:rgba(232,168,24,.1);border:1px solid rgba(232,168,24,.3);color:var(--warn)}
+.ban.i{background:var(--accentg);border:1px solid var(--border2);color:var(--text2)}
+.ban.e{background:rgba(232,48,32,.1);border:1px solid rgba(232,48,32,.3);color:var(--err)}
+textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:3px;color:var(--text);padding:6px;font-family:'Courier New',monospace;font-size:10px;resize:vertical;outline:none;line-height:1.5}
+textarea:focus{border-color:var(--accent)}
+
+.panel {
+	overflow-y: auto;
+}
+
+.sec {
+	min-height: 20px;
+}
+.sh {
+	min-height: 20px;
+	overflow-y: none;
+}
+.sc {
+	min-height: 600px;
+	overflow-y: auto;
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+<div id="panel">
+  <div id="ph">
+    <h1>N-Body Simulator</h1>
+    <p>2D GRAVITATIONAL · VELOCITY VERLET INTEGRATION</p>
+  </div>
+  <div id="pb">
+
+    <!-- SIM CONTROLS -->
+    <div class="sec">
+      <div class="sh open" onclick="toggleSec(this)">Simulation Control<span class="arr">▾</span></div>
+      <div class="sc">
+        <div id="playbar">
+          <button class="btn bi bs" id="bback" title="Step back (,)">⏮</button>
+          <button class="btn bi bp" id="bplay" title="Play/Pause (Space)">▶</button>
+          <button class="btn bi bs" id="bfwd" title="Step forward (.)">⏭</button>
+          <button class="btn bi bs" id="breset" title="Reset trails &amp; time">↺</button>
+          <button class="btn bi bs" id="brev" title="Toggle reverse time" style="font-size:9px">REV</button>
+          <span id="tdisp">t = 0.00 s</span>
+        </div>
+
+        <div class="sr">
+          <div class="row" style="justify-content:space-between">
+            <div class="row" style="gap:3px"><label style="margin:0">Speed (steps/frame)</label>
+              <div class="tip"><span class="tic">?</span><div class="tib">Log-scale. Each step = one full Velocity Verlet integration of Δt. Higher = faster simulation, lower accuracy.</div></div>
+            </div>
+            <span class="sv" id="spd-val">×1</span>
+          </div>
+          <input type="range" id="spd-sl" min="-2" max="4" step="0.05" value="0">
+          <div style="display:flex;justify-content:space-between;font-size:8px;color:var(--text3)"><span>slow</span><span>×10</span><span>×100</span><span>×1000</span><span>fast</span></div>
+        </div>
+
+        <div id="spd-box">
+          Δt: <span class="hv" id="dt-display">—</span><br>
+          Sim rate: <span class="hv" id="rate-display">—</span>
+        </div>
+
+        <div class="col2">
+          <div class="fld">
+            <div class="row" style="gap:3px"><label style="margin:0">Δt value</label><div class="tip"><span class="tic">?</span><div class="tib">Physics timestep per integration step. Smaller = more accurate. Error ∝ Δt².</div></div></div>
+            <input type="number" id="dt-val" value="1" min="1e-6" step="any">
+          </div>
+          <div class="fld">
+            <label>Δt unit</label>
+            <select id="dt-unit">
+              <option value="1">seconds</option>
+              <option value="3600" selected>hours</option>
+              <option value="86400">days</option>
+              <option value="31536000">years</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="fld">
+          <div class="row" style="gap:3px"><label style="margin:0">Softening ε (m)</label><div class="tip"><span class="tic">?</span><div class="tib">Prevents 1/r² singularity: r_eff = √(r²+ε²). Set 0 for exact physics (may diverge at close approach).</div></div></div>
+          <input type="number" id="eps" value="1e9" min="0" step="any">
+        </div>
+
+        <div class="fld">
+          <label>G constant (m³ kg⁻¹ s⁻²)</label>
+          <input type="number" id="g-val" value="6.674e-11" step="any">
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW -->
+    <div class="sec">
+      <div class="sh open" onclick="toggleSec(this)">View Controls<span class="arr">▾</span></div>
+      <div class="sc">
+        <div class="sr">
+          <div class="row" style="justify-content:space-between"><label style="margin:0">Zoom</label><span class="sv" id="zoom-val">—</span></div>
+          <input type="range" id="zoom-sl" min="-50" max="20" step="0.05" value="0">
+        </div>
+        <div class="br">
+          <button class="btn bs" id="btn-center" title="(C)">⊙ CoM</button>
+          <button class="btn bs" id="btn-fit" title="(F)">⤢ Fit All</button>
+          <button class="btn bs" id="btn-follow">⊛ Follow</button>
+          <button class="btn bs" id="btn-clear-trails">✕ Trails</button>
+        </div>
+        <div class="row"><input type="checkbox" id="ck-trails" checked><label for="ck-trails" style="margin:0;margin-left:3px">Orbital trails</label></div>
+        <div class="sr" id="trail-sr">
+          <div class="row" style="justify-content:space-between"><label style="margin:0">Trail length (steps)</label><span class="sv" id="tlen-val">500</span></div>
+          <input type="range" id="tlen-sl" min="20" max="3000" step="20" value="500">
+        </div>
+        <div class="row"><input type="checkbox" id="ck-vel"><label for="ck-vel" style="margin:0;margin-left:3px">Velocity vectors</label></div>
+        <div class="row"><input type="checkbox" id="ck-stars" checked><label for="ck-stars" style="margin:0;margin-left:3px">Star field</label></div>
+        <div class="row"><input type="checkbox" id="ck-glow" checked><label for="ck-glow" style="margin:0;margin-left:3px">Body glow</label></div>
+        <div class="row"><input type="checkbox" id="ck-labels" checked><label for="ck-labels" style="margin:0;margin-left:3px">Labels</label></div>
+        <div class="row"><input type="checkbox" id="ck-grid"><label for="ck-grid" style="margin:0;margin-left:3px">Coordinate grid</label></div>
+        <div class="row"><input type="checkbox" id="ck-acc"><label for="ck-acc" style="margin:0;margin-left:3px">Acceleration vectors</label></div>
+      </div>
+    </div>
+
+    <!-- UNITS -->
+    <div class="sec">
+      <div class="sh" onclick="toggleSec(this)">Units &amp; Scale<span class="arr">▾</span></div>
+      <div class="sc closed">
+        <div class="col2">
+          <div class="fld"><label>Distance unit</label>
+            <select id="du">
+              <option value="1">m</option>
+              <option value="1.496e11" selected>AU</option>
+              <option value="9.461e15">ly</option>
+              <option value="3.086e16">pc</option>
+            </select>
+          </div>
+          <div class="fld"><label>Mass unit</label>
+            <select id="mu">
+              <option value="1">kg</option>
+              <option value="1.989e30" selected>M☉</option>
+              <option value="5.972e24">M⊕</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BODIES -->
+    <div class="sec">
+      <div class="sh open" onclick="toggleSec(this)">Bodies<span class="arr">▾</span></div>
+      <div class="sc">
+        <div id="blist"></div>
+        <div id="selinfo" style="display:none"></div>
+        <div class="br">
+          <button class="btn bp" id="btn-add" style="flex:1">+ Add Body</button>
+          <button class="btn bd" id="btn-clr">✕ All</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRESETS -->
+    <div class="sec">
+      <div class="sh open" onclick="toggleSec(this)">Preset Systems<span class="arr">▾</span></div>
+      <div class="sc">
+        <div class="pgrid">
+          <button class="btn bs pb" onclick="loadPreset('solar')">☀ Solar System</button>
+          <button class="btn bs pb" onclick="loadPreset('binary')">★★ Binary Star</button>
+          <button class="btn bs pb" onclick="loadPreset('figure8')">∞ Figure-8</button>
+          <button class="btn bs pb" onclick="loadPreset('galaxy')">⬡ Galaxy Merge</button>
+          <button class="btn bs pb" onclick="loadPreset('lagrange')">△ Lagrange L4/5</button>
+          <button class="btn bs pb" onclick="loadPreset('asteroids')">◉ Asteroid Belt</button>
+        </div>
+        <div class="ban i" id="preset-info" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- DIAGNOSTICS -->
+    <div class="sec">
+      <div class="sh" onclick="toggleSec(this)">Physics Diagnostics<span class="arr">▾</span></div>
+      <div class="sc closed">
+        <div class="mr"><span class="ml">Total energy E</span><span class="mv n" id="m-E">—</span></div>
+        <div class="mr"><span class="ml">Kinetic energy KE</span><span class="mv n" id="m-KE">—</span></div>
+        <div class="mr"><span class="ml">Potential energy PE</span><span class="mv n" id="m-PE">—</span></div>
+        <div class="mr"><span class="ml">Energy drift</span><span class="mv g" id="m-drift">—</span></div>
+        <div class="mr"><span class="ml">Center of mass X</span><span class="mv n" id="m-cx">—</span></div>
+        <div class="mr"><span class="ml">Center of mass Y</span><span class="mv n" id="m-cy">—</span></div>
+        <div class="mr"><span class="ml">Total |momentum|</span><span class="mv n" id="m-mom">—</span></div>
+        <div class="mr"><span class="ml">Far bodies (&gt;10³ AU)</span><span class="mv n" id="m-far">0</span></div>
+        <div class="ban w" id="perf-warn" style="display:none">FPS &lt; 30 — reduce steps/frame or trail length</div>
+      </div>
+    </div>
+
+    <!-- IMPORT/EXPORT -->
+    <div class="sec">
+      <div class="sh" onclick="toggleSec(this)">Import / Export<span class="arr">▾</span></div>
+      <div class="sc closed">
+        <div class="br">
+          <button class="btn bs" id="btn-exp">↓ Export</button>
+          <button class="btn bs" id="btn-imp">↑ Import</button>
+          <button class="btn bs" id="btn-sav">⬡ Save</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div><!-- /panel -->
+
+<!-- CANVAS AREA -->
+<div id="cw">
+  <canvas id="tc"></canvas>
+  <canvas id="cv"></canvas>
+  <div id="hud">
+    <div class="hb">FPS <span class="hv" id="h-fps">--</span></div>
+    <div class="hb">Bodies <span class="hv" id="h-bc">0</span></div>
+    <div class="hb" id="h-spf">Steps/fr <span class="hv" id="h-sf">1</span></div>
+  </div>
+  <div id="sb">Double-click canvas to add body · Scroll to zoom · Drag to pan · Click body to select</div>
+  <div id="cbtns">
+    <button class="btn bi cb" onclick="zoomBy(1.2)">+</button>
+    <button class="btn bi cb" onclick="zoomBy(0.83)">−</button>
+  </div>
+</div>
+
+</div><!-- /app -->
+
+<!-- BODY EDITOR MODAL -->
+<div class="mbg hidden" id="body-modal">
+  <div class="mo">
+    <h2 id="bm-title">Add Body</h2>
+    <div class="mg">
+      <div class="fld" style="grid-column:1/-1"><label>Name</label><input type="text" id="bm-name" value="Body"></div>
+      <div class="fld"><label>Mass (<span id="bm-mu">M☉</span>)</label><input type="number" id="bm-mass" value="1" step="any"></div>
+      <div class="fld"><label>Display radius (px)</label><input type="number" id="bm-rad" value="6" min="2" max="80"></div>
+      <div class="fld" style="grid-column:1/-1">
+        <label>Color</label>
+        <div class="row"><input type="color" id="bm-col" value="#e07818"><div class="cps" id="bm-cps"></div></div>
+      </div>
+    </div>
+    <hr class="ms">
+    <p class="mt">Position (<span id="bm-du">AU</span>)</p>
+    <div class="col2">
+      <div class="fld"><label>X</label><input type="number" id="bm-px" value="0" step="any"></div>
+      <div class="fld"><label>Y</label><input type="number" id="bm-py" value="0" step="any"></div>
+    </div>
+    <hr class="ms">
+    <p class="mt">Velocity</p>
+    <div class="tabr" id="vel-tabs">
+      <button class="tabb on" data-mode="xy">X/Y (m/s)</button>
+      <button class="tabb" data-mode="polar">|v| + Angle</button>
+      <button class="tabb" data-mode="circ">Circular Orbit</button>
+    </div>
+    <div id="vel-xy" class="col2" style="margin-top:6px">
+      <div class="fld"><label>Vx (m/s)</label><input type="number" id="bm-vx" value="0" step="any"></div>
+      <div class="fld"><label>Vy (m/s)</label><input type="number" id="bm-vy" value="0" step="any"></div>
+    </div>
+    <div id="vel-polar" class="col2" style="margin-top:6px;display:none">
+      <div class="fld"><label>|v| (m/s)</label><input type="number" id="bm-vmag" value="0" step="any"></div>
+      <div class="fld"><label>Angle (°)</label><input type="number" id="bm-vang" value="0" step="any"></div>
+    </div>
+    <div id="vel-circ" style="margin-top:6px;display:none">
+      <div class="ban i">Automatically sets velocity for circular orbit around the current center of mass. Direction: CCW.</div>
+    </div>
+    <div class="mf">
+      <button class="btn bs" id="bm-cancel">Cancel</button>
+      <button class="btn bd" id="bm-del" style="display:none">Delete</button>
+      <button class="btn bp" id="bm-save">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- IMPORT MODAL -->
+<div class="mbg hidden" id="imp-modal">
+  <div class="mo">
+    <h2>Import Simulation</h2>
+    <p style="font-size:9px;color:var(--text2)">Paste exported JSON. All values stored in raw SI units (meters, kg, m/s).</p>
+    <textarea id="imp-ta" rows="14" placeholder='{"version":"1.0","bodies":[...]}'></textarea>
+    <div class="ban e" id="imp-err" style="display:none"></div>
+    <div class="mf">
+      <button class="btn bs" id="imp-cancel">Cancel</button>
+      <button class="btn bp" id="imp-ok">Load</button>
+    </div>
+  </div>
+</div>
+
+<!-- EXPORT MODAL -->
+<div class="mbg hidden" id="exp-modal">
+  <div class="mo">
+    <h2>Export Simulation</h2>
+    <textarea id="exp-ta" rows="18" readonly></textarea>
+    <div class="mf">
+      <button class="btn bs" id="exp-close">Close</button>
+      <button class="btn bp" id="exp-copy">Copy</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+const G0 = 6.674e-11;
+const AU = 1.496e11;
+const MS = 1.989e30;
+const ME = 5.972e24;
+
+const S = {
+  bodies: [], G: G0, eps: 1e9, dt: 3600,
+  stepsLog: 0,      // log10(steps/frame), range [-2, 4]
+  reverse: false,
+  running: false, simTime: 0,
+  zoom: 1e-10, panX: 0, panY: 0,
+  followId: null, selectedId: null,
+  showTrails: true, trailLen: 500,
+  showVel: false, showAcc: false, showStars: true, showGlow: true,
+  showLabels: true, showGrid: false,
+  distUnit: AU, distLabel: 'AU',
+  massUnit: MS, massLabel: 'M☉',
+  E0: null, fps: 60,
+};
+
+let nextId = 1;
+let stars = [];
+let trails = {};   // id → {pts: [{x,y}], head, len}
+let animId = null;
+let lastTs = 0;
+let fpsBuf = [];
+let editId = null;
+let velMode = 'xy';
+// drag detection
+let dragDist = 0;
+let dragStart = {mx:0,my:0,px:0,py:0};
+let dragging = false;
+let didDrag = false;
+let lastMouseSim = {x:0,y:0};
+// frame-skip for slow motion
+let frameAcc = 0;
+// last computed accelerations for display
+let lastAccels = null;
+
+const cv  = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+const tc  = document.getElementById('tc');
+const tctx = tc.getContext('2d');
+const cw  = document.getElementById('cw');
+
+// ═══════════════════════════════════════
+// RESIZE
+// ═══════════════════════════════════════
+function resize() {
+  cv.width = tc.width = cw.clientWidth;
+  cv.height = tc.height = cw.clientHeight;
+  genStars();
+}
+window.addEventListener('resize', resize);
+
+// ═══════════════════════════════════════
+// STARS
+// ═══════════════════════════════════════
+function genStars() {
+  stars = [];
+  const n = Math.floor(cv.width * cv.height / 2800);
+  for (let i = 0; i < n; i++)
+    stars.push({x: Math.random()*cv.width, y: Math.random()*cv.height,
+                r: Math.random()*1.1+0.2, a: Math.random()*.5+.25});
+}
+
+// ═══════════════════════════════════════
+// COORD TRANSFORMS
+// ═══════════════════════════════════════
+function s2c(sx, sy) {  // sim → canvas
+  return { x: sx*S.zoom + cv.width/2 + S.panX,
+           y: -sy*S.zoom + cv.height/2 + S.panY };
+}
+function c2s(cx, cy) {  // canvas → sim
+  return { x: (cx - cv.width/2 - S.panX)/S.zoom,
+           y: -(cy - cv.height/2 - S.panY)/S.zoom };
+}
+
+// ═══════════════════════════════════════
+// PHYSICS — Velocity Verlet (O(n²))
+// ═══════════════════════════════════════
+function computeAcc(bodies) {
+  const n = bodies.length;
+  const ax = new Float64Array(n), ay = new Float64Array(n);
+  const e2 = S.eps * S.eps;
+  for (let i = 0; i < n; i++) {
+    for (let j = i+1; j < n; j++) {
+      const dx = bodies[j].x - bodies[i].x;
+      const dy = bodies[j].y - bodies[i].y;
+      // r_eff² = r² + ε²  (softening prevents singularity)
+      const r2 = dx*dx + dy*dy + e2;
+      const r  = Math.sqrt(r2);
+      const r3 = r2 * r;
+      const f  = S.G / r3;
+      // F_i = G·mj·(rj-ri)/|rj-ri|³  →  a_i = G·mj·dx/r³
+      ax[i] += f * bodies[j].mass * dx;
+      ay[i] += f * bodies[j].mass * dy;
+      ax[j] -= f * bodies[i].mass * dx;
+      ay[j] -= f * bodies[i].mass * dy;
+    }
+  }
+  return {ax, ay};
+}
+
+function stepVerlet(dt) {
+  const b = S.bodies, n = b.length;
+  if (!n) return;
+  // Step 1: a(t)
+  const {ax:ax0, ay:ay0} = computeAcc(b);
+  // Step 2: x(t+dt) = x + v·dt + ½a·dt²
+  for (let i = 0; i < n; i++) {
+    b[i].x += b[i].vx*dt + 0.5*ax0[i]*dt*dt;
+    b[i].y += b[i].vy*dt + 0.5*ay0[i]*dt*dt;
+  }
+  // Step 3: a(t+dt)
+  const {ax:ax1, ay:ay1} = computeAcc(b);
+  // Step 4: v(t+dt) = v + ½(a(t)+a(t+dt))·dt
+  for (let i = 0; i < n; i++) {
+    b[i].vx += 0.5*(ax0[i]+ax1[i])*dt;
+    b[i].vy += 0.5*(ay0[i]+ay1[i])*dt;
+  }
+  lastAccels = {ax:ax1, ay:ay1};
+  S.simTime += dt;
+}
+
+// ═══════════════════════════════════════
+// ENERGY & DIAGNOSTICS
+// ═══════════════════════════════════════
+function calcEnergy() {
+  const b = S.bodies; const e2 = S.eps*S.eps;
+  let KE = 0, PE = 0;
+  for (let i = 0; i < b.length; i++) {
+    KE += 0.5*b[i].mass*(b[i].vx**2 + b[i].vy**2);
+    for (let j = i+1; j < b.length; j++) {
+      const dx = b[j].x-b[i].x, dy = b[j].y-b[i].y;
+      const r = Math.sqrt(dx*dx+dy*dy+e2);
+      PE -= S.G*b[i].mass*b[j].mass/r;
+    }
+  }
+  return {KE, PE, E: KE+PE};
+}
+
+function com() {
+  let mx=0,my=0,mt=0;
+  for (const b of S.bodies){mx+=b.x*b.mass;my+=b.y*b.mass;mt+=b.mass;}
+  return mt>0?{x:mx/mt,y:my/mt}:{x:0,y:0};
+}
+
+function totalMom() {
+  let px=0,py=0;
+  for (const b of S.bodies){px+=b.vx*b.mass;py+=b.vy*b.mass;}
+  return Math.hypot(px,py);
+}
+
+let metTick=0;
+function updateMetrics() {
+  if (++metTick % 20 !== 0) return;
+  if (S.bodies.length === 0) return;
+  const {KE,PE,E} = calcEnergy();
+  if (S.E0 === null && S.bodies.length > 1) S.E0 = E;
+  const drift = (S.E0 && S.E0 !== 0) ? Math.abs((E-S.E0)/S.E0)*100 : 0;
+  const c = com();
+  const mom = totalMom();
+  el('m-E').textContent   = fmtSci(E)+' J';
+  el('m-KE').textContent  = fmtSci(KE)+' J';
+  el('m-PE').textContent  = fmtSci(PE)+' J';
+  const de = el('m-drift');
+  de.textContent = drift.toFixed(5)+'%';
+  de.className = 'mv '+(drift<0.01?'g':drift<1?'w':'e');
+  el('m-cx').textContent  = fmtSci(c.x/S.distUnit)+' '+S.distLabel;
+  el('m-cy').textContent  = fmtSci(c.y/S.distUnit)+' '+S.distLabel;
+  el('m-mom').textContent = fmtSci(mom)+' kg·m/s';
+  // bodies far from CoM > 1000 AU
+  let far = 0;
+  for (const b of S.bodies) {
+    const dx=b.x-c.x, dy=b.y-c.y;
+    if (Math.hypot(dx,dy) > 1000*AU) far++;
+  }
+  el('m-far').textContent = far;
+  el('perf-warn').style.display = S.fps < 30 && S.bodies.length > 0 ? '' : 'none';
+  updateSelectedInfo();
+}
+
+// ═══════════════════════════════════════
+// TRAILS
+// ═══════════════════════════════════════
+function ensureTrails() {
+  for (const b of S.bodies) {
+    if (!trails[b.id]) trails[b.id] = {pts:[], head:0, full:false};
+  }
+  for (const id in trails) {
+    if (!S.bodies.find(b=>b.id==id)) delete trails[id];
+  }
+}
+
+function recordTrail() {
+  const maxL = S.trailLen;
+  for (const b of S.bodies) {
+    const t = trails[b.id]; if (!t) continue;
+    if (t.pts.length < maxL) {
+      t.pts.push({x:b.x, y:b.y});
+    } else {
+      t.pts[t.head] = {x:b.x, y:b.y};
+      t.head = (t.head+1)%maxL;
+      t.full = true;
+    }
+  }
+}
+
+function clearTrails() {
+  for (const id in trails) trails[id] = {pts:[], head:0, full:false};
+  tctx.clearRect(0,0,tc.width,tc.height);
+}
+
+function drawTrails() {
+  tctx.clearRect(0,0,tc.width,tc.height);
+  for (const b of S.bodies) {
+    const t = trails[b.id]; if (!t||t.pts.length<2) continue;
+    const pts = t.full ? [...t.pts.slice(t.head), ...t.pts.slice(0,t.head)] : t.pts;
+    const n = pts.length;
+    // Banded rendering: 10 bands → 10 draw calls per body instead of n
+    const BANDS = 10;
+    const bs = Math.ceil(n/BANDS);
+    const [r,g,bl] = hexRGB(b.color);
+    for (let band=0; band<BANDS; band++) {
+      const s0 = band*bs, s1 = Math.min(s0+bs+1, n);
+      if (s0 >= n-1) continue;
+      const alpha = ((band+1)/BANDS)*0.65;
+      tctx.beginPath();
+      const p0 = s2c(pts[s0].x, pts[s0].y);
+      tctx.moveTo(p0.x, p0.y);
+      for (let i=s0+1; i<s1; i++) {
+        const p = s2c(pts[i].x, pts[i].y);
+        tctx.lineTo(p.x, p.y);
+      }
+      tctx.strokeStyle = `rgba(${r},${g},${bl},${alpha})`;
+      tctx.lineWidth = 1;
+      tctx.stroke();
+    }
+  }
+}
+
+// ═══════════════════════════════════════
+// GRID
+// ═══════════════════════════════════════
+function drawGrid() {
+  const W=cv.width, H=cv.height;
+  // compute grid spacing in sim units
+  const targetPxSpacing = 80;
+  const simSpacing = targetPxSpacing / S.zoom;
+  const mag = Math.pow(10, Math.floor(Math.log10(simSpacing)));
+  const spacings = [1,2,5,10].map(f=>f*mag);
+  const spacing = spacings.find(s=>s*S.zoom>=targetPxSpacing) || spacings[3];
+
+  ctx.save();
+  ctx.strokeStyle = 'rgba(26,34,48,1)';
+  ctx.lineWidth = 1;
+  ctx.fillStyle = 'rgba(74,96,128,0.6)';
+  ctx.font = '8px Courier New';
+
+  const ox = (cv.width/2+S.panX);
+  const oy = (cv.height/2+S.panY);
+  const startX = Math.floor((-ox)/S.zoom/spacing)*spacing;
+  const startY = Math.floor((oy-H)/S.zoom/spacing)*spacing;
+  const endX   = Math.ceil((W-ox)/S.zoom/spacing)*spacing;
+  const endY   = Math.ceil(oy/S.zoom/spacing)*spacing;
+
+  // vertical lines
+  for (let x=startX; x<=endX; x+=spacing) {
+    const px = x*S.zoom+cv.width/2+S.panX;
+    ctx.beginPath(); ctx.moveTo(px,0); ctx.lineTo(px,H); ctx.stroke();
+    const label = fmtSci(x/S.distUnit)+S.distLabel;
+    ctx.fillText(label, px+2, 10);
+  }
+  // horizontal lines
+  for (let y=startY; y<=endY; y+=spacing) {
+    const py = -y*S.zoom+cv.height/2+S.panY;
+    ctx.beginPath(); ctx.moveTo(0,py); ctx.lineTo(W,py); ctx.stroke();
+    if (Math.abs(y)>0) ctx.fillText(fmtSci(y/S.distUnit)+S.distLabel, 2, py-2);
+  }
+  // axes
+  ctx.strokeStyle = 'rgba(74,96,128,0.3)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(ox,0); ctx.lineTo(ox,H); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0,oy); ctx.lineTo(W,oy); ctx.stroke();
+  ctx.restore();
+}
+
+// ═══════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════
+function render() {
+  const W=cv.width, H=cv.height;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#05070f';
+  ctx.fillRect(0,0,W,H);
+
+  if (S.showStars) {
+    for (const s of stars) {
+      ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(255,255,255,${s.a})`; ctx.fill();
+    }
+  }
+  if (S.showGrid) drawGrid();
+
+  // max velocity for adaptive vel vector scale
+  let maxV = 1;
+  if (S.showVel || S.showAcc) {
+    for (const b of S.bodies) maxV = Math.max(maxV, Math.hypot(b.vx,b.vy));
+  }
+  const velArrow = 65; // max arrow px
+
+  for (const b of S.bodies) {
+    const {x:sx,y:sy} = s2c(b.x, b.y);
+    const r = b.radius;
+    const [rr,gg,bb2] = hexRGB(b.color);
+
+    if (S.showGlow) {
+      const grd = ctx.createRadialGradient(sx,sy,0,sx,sy,r*5);
+      grd.addColorStop(0,`rgba(${rr},${gg},${bb2},0.3)`);
+      grd.addColorStop(1,'transparent');
+      ctx.beginPath(); ctx.arc(sx,sy,r*5,0,Math.PI*2);
+      ctx.fillStyle=grd; ctx.fill();
+    }
+
+    // body
+    ctx.beginPath(); ctx.arc(sx,sy,r,0,Math.PI*2);
+    ctx.fillStyle = b.color; ctx.fill();
+    if (b.id === S.selectedId) {
+      ctx.strokeStyle=`rgba(${rr},${gg},${bb2},0.9)`;
+      ctx.lineWidth=2; ctx.stroke();
+      // selection ring
+      ctx.beginPath(); ctx.arc(sx,sy,r+5,0,Math.PI*2);
+      ctx.strokeStyle=`rgba(${rr},${gg},${bb2},0.4)`;
+      ctx.lineWidth=1; ctx.stroke();
+    } else {
+      ctx.strokeStyle='rgba(255,255,255,0.15)';
+      ctx.lineWidth=1; ctx.stroke();
+    }
+
+    if (S.showLabels) {
+      ctx.fillStyle='rgba(184,200,216,0.85)';
+      ctx.font='9px Courier New';
+      ctx.fillText(b.name, sx+r+3, sy-r);
+    }
+
+    if (S.showVel) {
+      const scale = velArrow / maxV;
+      const ex = sx + b.vx*scale, ey = sy - b.vy*scale;
+      if (Math.hypot(ex-sx,ey-sy) > 3) {
+        drawArrow(ctx, sx,sy, ex,ey, '#10cce8', 1.5);
+      }
+    }
+
+    if (S.showAcc && lastAccels) {
+      const i = S.bodies.indexOf(b);
+      if (i >= 0) {
+        const amag = Math.hypot(lastAccels.ax[i], lastAccels.ay[i]);
+        if (amag > 0) {
+          const maxA = Math.max(1e-20, ...Array.from(lastAccels.ax).map((a,j)=>Math.hypot(a,lastAccels.ay[j])));
+          const scale = 50/maxA;
+          const ex = sx + lastAccels.ax[i]*scale;
+          const ey = sy - lastAccels.ay[i]*scale;
+          drawArrow(ctx, sx,sy, ex,ey, '#e83020', 1.2);
+        }
+      }
+    }
+  }
+}
+
+function drawArrow(c, x1,y1, x2,y2, color, lw) {
+  c.beginPath(); c.moveTo(x1,y1); c.lineTo(x2,y2);
+  c.strokeStyle=color; c.lineWidth=lw; c.stroke();
+  const ang=Math.atan2(y2-y1,x2-x1), al=7;
+  c.beginPath();
+  c.moveTo(x2,y2);
+  c.lineTo(x2-al*Math.cos(ang-0.4),y2-al*Math.sin(ang-0.4));
+  c.lineTo(x2-al*Math.cos(ang+0.4),y2-al*Math.sin(ang+0.4));
+  c.closePath(); c.fillStyle=color; c.fill();
+}
+
+// ═══════════════════════════════════════
+// FOLLOW MODE
+// ═══════════════════════════════════════
+function applyFollow() {
+  if (!S.followId) return;
+  const b = S.bodies.find(b=>b.id===S.followId);
+  if (!b) { S.followId=null; return; }
+  // center pan on body
+  S.panX = -b.x * S.zoom;
+  S.panY =  b.y * S.zoom;
+}
+
+// ═══════════════════════════════════════
+// ANIMATION LOOP
+// ═══════════════════════════════════════
+function loop(ts) {
+  animId = requestAnimationFrame(loop);
+  const dt_real = Math.min(ts - lastTs, 100); lastTs = ts;
+
+  // fps
+  fpsBuf.push(1000/(dt_real||16));
+  if (fpsBuf.length>30) fpsBuf.shift();
+  S.fps = Math.round(fpsBuf.reduce((a,b)=>a+b,0)/fpsBuf.length);
+  el('h-fps').textContent = S.fps;
+  el('h-bc').textContent  = S.bodies.length;
+
+  // compute steps this frame
+  const spf = getSpf();
+  el('h-sf').textContent = spf >= 1 ? spf : `1/${Math.round(1/spf)}`;
+
+  if (S.running) {
+    const sign = S.reverse ? -1 : 1;
+    if (spf >= 1) {
+      const steps = Math.min(Math.round(spf), 5000);
+      for (let i=0; i<steps; i++) stepVerlet(S.dt*sign);
+      ensureTrails(); recordTrail();
+    } else {
+      // slow motion: accumulate fraction steps
+      frameAcc += spf;
+      if (frameAcc >= 1) {
+        frameAcc -= 1;
+        stepVerlet(S.dt*sign);
+        ensureTrails(); recordTrail();
+      }
+    }
+  }
+
+  applyFollow();
+
+  updateTimeDisplay();
+  updateSpeedDisplay();
+  updateMetrics();
+
+  if (S.showTrails) drawTrails(); else tctx.clearRect(0,0,tc.width,tc.height);
+  render();
+}
+
+function getSpf() {
+  // S.stepsLog ∈ [-2,4] → steps/frame = 10^stepsLog
+  return Math.pow(10, S.stepsLog);
+}
+
+// ═══════════════════════════════════════
+// DISPLAY UPDATES
+// ═══════════════════════════════════════
+function updateTimeDisplay() {
+  const t = Math.abs(S.simTime), neg = S.simTime<0;
+  let s;
+  if (t < 3600)       s = t.toFixed(1)+' s';
+  else if (t < 86400) s = (t/3600).toFixed(2)+' hr';
+  else if (t < 3.156e7) s = (t/86400).toFixed(2)+' d';
+  else if (t < 3.156e10) s = (t/3.156e7).toFixed(2)+' yr';
+  else                s = (t/3.156e7/1e3).toFixed(2)+' kyr';
+  el('tdisp').textContent = (neg?'−':'')+'t = '+s;
+}
+
+function updateSpeedDisplay() {
+  const spf = getSpf();
+  const spfDisp = spf >= 1 ? '×'+Math.round(spf) : '1/'+Math.round(1/spf);
+  el('spd-val').textContent = spfDisp;
+
+  const dtSec = S.dt;
+  let dtStr;
+  if (dtSec < 3600)       dtStr = dtSec.toFixed(1)+' s';
+  else if (dtSec < 86400) dtStr = (dtSec/3600).toFixed(2)+' hr';
+  else if (dtSec < 3.156e7) dtStr = (dtSec/86400).toFixed(2)+' d';
+  else                    dtStr = (dtSec/3.156e7).toFixed(2)+' yr';
+  el('dt-display').textContent = dtStr;
+
+  // simulated time per real second
+  const simPerSec = dtSec * Math.max(spf,1) * S.fps;
+  let rateStr;
+  if (simPerSec < 3600)       rateStr = simPerSec.toFixed(1)+' s/s';
+  else if (simPerSec < 86400) rateStr = (simPerSec/3600).toFixed(2)+' hr/s';
+  else if (simPerSec < 3.156e7) rateStr = (simPerSec/86400).toFixed(2)+' d/s';
+  else if (simPerSec < 3.156e10) rateStr = (simPerSec/3.156e7).toFixed(2)+' yr/s';
+  else rateStr = fmtSci(simPerSec/3.156e7)+' yr/s';
+  el('rate-display').textContent = rateStr+(S.reverse?' [REV]':'');
+}
+
+function updateZoomDisplay() {
+  // show as: 1 px = X distUnit
+  const mPerPx = 1/S.zoom;
+  const unitPerPx = mPerPx/S.distUnit;
+  let s;
+  if (unitPerPx < 1e-3)      s = fmtSci(unitPerPx)+' '+S.distLabel+'/px';
+  else if (unitPerPx < 1e3)  s = unitPerPx.toPrecision(3)+' '+S.distLabel+'/px';
+  else                       s = fmtSci(unitPerPx)+' '+S.distLabel+'/px';
+  el('zoom-val').textContent = s;
+  // sync slider
+  const lz = Math.log2(S.zoom);
+  el('zoom-sl').value = Math.max(-50, Math.min(20, lz));
+}
+
+function updateSelectedInfo() {
+  const b = S.selectedId ? S.bodies.find(b=>b.id===S.selectedId) : null;
+  const box = el('selinfo');
+  if (!b) { box.style.display='none'; return; }
+  box.style.display='';
+  const v = Math.hypot(b.vx, b.vy);
+  const KE = 0.5*b.mass*v*v;
+  const c = com();
+  const dist = Math.hypot(b.x-c.x, b.y-c.y);
+  box.innerHTML = `
+    <div class="sih" style="border-color:${b.color};color:${b.color}">${escH(b.name)}</div>
+    <div class="sir"><span class="sil">Mass</span><span class="siv">${fmtSci(b.mass/S.massUnit)} ${S.massLabel}</span></div>
+    <div class="sir"><span class="sil">Pos X</span><span class="siv">${fmtSci(b.x/S.distUnit)} ${S.distLabel}</span></div>
+    <div class="sir"><span class="sil">Pos Y</span><span class="siv">${fmtSci(b.y/S.distUnit)} ${S.distLabel}</span></div>
+    <div class="sir"><span class="sil">Speed</span><span class="siv">${fmtSci(v)} m/s</span></div>
+    <div class="sir"><span class="sil">Vx/Vy</span><span class="siv">${fmtSci(b.vx)}/${fmtSci(b.vy)}</span></div>
+    <div class="sir"><span class="sil">KE</span><span class="siv">${fmtSci(KE)} J</span></div>
+    <div class="sir"><span class="sil">Dist from CoM</span><span class="siv">${fmtSci(dist/S.distUnit)} ${S.distLabel}</span></div>`;
+}
+
+// ═══════════════════════════════════════
+// BODY MANAGEMENT
+// ═══════════════════════════════════════
+function mkBody(o) {
+  return { id: nextId++, name: o.name||'Body', mass: o.mass||1e24,
+           x: o.x||0, y: o.y||0, vx: o.vx||0, vy: o.vy||0,
+           color: o.color||'#e07818', radius: o.radius||6 };
+}
+function addBody(o) {
+  const b = mkBody(o);
+  S.bodies.push(b);
+  trails[b.id] = {pts:[],head:0,full:false};
+  rebuildList();
+  S.E0 = null;
+  return b;
+}
+function delBody(id) {
+  S.bodies = S.bodies.filter(b=>b.id!==id);
+  delete trails[id];
+  if (S.selectedId===id) S.selectedId=null;
+  if (S.followId===id) S.followId=null;
+  rebuildList();
+  S.E0 = null;
+}
+
+function selectBody(id) {
+  S.selectedId = id;
+  rebuildList();
+  updateSelectedInfo();
+}
+
+function rebuildList() {
+  const el2 = el('blist');
+  el2.innerHTML = '';
+  for (const b of S.bodies) {
+    const d = document.createElement('div');
+    d.className = 'bi2'+(b.id===S.selectedId?' sel':'');
+    d.innerHTML = `<div class="bsw" style="background:${b.color}"></div>
+      <div style="flex:1;min-width:0"><div class="bnm">${escH(b.name)}</div>
+      <div class="bms">${fmtSci(b.mass/S.massUnit)} ${S.massLabel}</div></div>
+      <div class="bac">
+        <button class="btn bi bs" data-id="${b.id}" data-a="edit" title="Edit">✎</button>
+        <button class="btn bi bd" data-id="${b.id}" data-a="del" title="Delete">✕</button>
+      </div>`;
+    d.addEventListener('click', ev => { if (!ev.target.dataset.a) selectBody(b.id); });
+    el2.appendChild(d);
+  }
+  el2.querySelectorAll('[data-a=edit]').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();openModal(+btn.dataset.id)}));
+  el2.querySelectorAll('[data-a=del]').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();delBody(+btn.dataset.id)}));
+}
+
+// ═══════════════════════════════════════
+// BODY MODAL
+// ═══════════════════════════════════════
+const COLS = ['#FDB813','#e07818','#e83020','#10e87a','#10cce8','#9b59b6','#e8a818','#b5b5b5','#ff6b9d','#1abc9c'];
+
+function initCPS() {
+  const wrap = el('bm-cps'); wrap.innerHTML='';
+  for (const c of COLS) {
+    const d = document.createElement('div');
+    d.className='cp'; d.style.background=c;
+    d.addEventListener('click',()=>{
+      el('bm-col').value=c;
+      wrap.querySelectorAll('.cp').forEach(p=>p.classList.remove('on'));
+      d.classList.add('on');
+    });
+    wrap.appendChild(d);
+  }
+}
+
+function openModal(id, prefillPos) {
+  editId = id||null;
+  el('bm-mu').textContent = S.massLabel;
+  el('bm-du').textContent = S.distLabel;
+  const delBtn = el('bm-del');
+
+  if (id) {
+    el('bm-title').textContent='Edit Body';
+    delBtn.style.display='';
+    const b = S.bodies.find(b=>b.id===id);
+    el('bm-name').value = b.name;
+    el('bm-mass').value = b.mass/S.massUnit;
+    el('bm-rad').value  = b.radius;
+    el('bm-col').value  = b.color;
+    el('bm-px').value   = (b.x/S.distUnit).toPrecision(8);
+    el('bm-py').value   = (b.y/S.distUnit).toPrecision(8);
+    el('bm-vx').value   = b.vx;
+    el('bm-vy').value   = b.vy;
+    el('bm-vmag').value = Math.hypot(b.vx,b.vy).toPrecision(6);
+    el('bm-vang').value = (Math.atan2(b.vy,b.vx)*180/Math.PI).toFixed(3);
+  } else {
+    el('bm-title').textContent='Add Body';
+    delBtn.style.display='none';
+    el('bm-name').value = 'Body '+(nextId);
+    el('bm-mass').value = 1;
+    el('bm-rad').value  = 6;
+    el('bm-col').value  = COLS[S.bodies.length%COLS.length];
+    el('bm-px').value   = prefillPos ? (prefillPos.x/S.distUnit).toPrecision(6) : 0;
+    el('bm-py').value   = prefillPos ? (prefillPos.y/S.distUnit).toPrecision(6) : 0;
+    el('bm-vx').value   = 0; el('bm-vy').value=0;
+    el('bm-vmag').value = 0; el('bm-vang').value=0;
+  }
+  el('body-modal').classList.remove('hidden');
+}
+function closeModal() { el('body-modal').classList.add('hidden'); }
+function saveModal() {
+  let vx=0,vy=0;
+  if (velMode==='xy') {
+    vx = +el('bm-vx').value||0; vy = +el('bm-vy').value||0;
+  } else if (velMode==='polar') {
+    const mag=+el('bm-vmag').value||0, ang=(+el('bm-vang').value||0)*Math.PI/180;
+    vx=mag*Math.cos(ang); vy=mag*Math.sin(ang);
+  } else { // circ
+    // compute circular orbit velocity around CoM
+    const px = (+el('bm-px').value||0)*S.distUnit;
+    const py = (+el('bm-py').value||0)*S.distUnit;
+    const c = com();
+    const dx=px-c.x, dy=py-c.y, r=Math.hypot(dx,dy);
+    let totalM = S.bodies.reduce((s,b)=>s+b.mass,0);
+    if (editId) totalM -= (S.bodies.find(b=>b.id===editId)||{mass:0}).mass;
+    const vorb = r>0 ? Math.sqrt(S.G*totalM/r) : 0;
+    // CCW: tangent = (-dy,dx)/r * vorb
+    vx = -dy/r*vorb; vy = dx/r*vorb;
+    el('bm-vx').value = vx.toFixed(4);
+    el('bm-vy').value = vy.toFixed(4);
+  }
+  const data = {
+    name:  el('bm-name').value||'Body',
+    mass:  (+el('bm-mass').value||1)*S.massUnit,
+    radius:+el('bm-rad').value||6,
+    color: el('bm-col').value,
+    x:     (+el('bm-px').value||0)*S.distUnit,
+    y:     (+el('bm-py').value||0)*S.distUnit,
+    vx, vy,
+  };
+  if (editId) {
+    const b = S.bodies.find(b=>b.id===editId);
+    Object.assign(b, data);
+    rebuildList();
+  } else {
+    addBody(data);
+  }
+  S.E0 = null;
+  closeModal();
+}
+
+// velocity mode tabs
+el('vel-tabs').querySelectorAll('.tabb').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    velMode = btn.dataset.mode;
+    el('vel-tabs').querySelectorAll('.tabb').forEach(b=>b.classList.remove('on'));
+    btn.classList.add('on');
+    el('vel-xy').style.display    = velMode==='xy'?'':'none';
+    el('vel-polar').style.display = velMode==='polar'?'':'none';
+    el('vel-circ').style.display  = velMode==='circ'?'':'none';
+  });
+});
+
+// ═══════════════════════════════════════
+// CANVAS INTERACTION
+// ═══════════════════════════════════════
+cv.addEventListener('mousedown', e => {
+  e.preventDefault();
+  didDrag = false; dragDist = 0;
+  dragStart = {mx:e.clientX, my:e.clientY, px:S.panX, py:S.panY};
+  dragging = true;
+  cv.style.cursor='grabbing';
+});
+
+window.addEventListener('mousemove', e => {
+  const rect = cv.getBoundingClientRect();
+  const mx=e.clientX-rect.left, my=e.clientY-rect.top;
+  const sim = c2s(mx,my);
+  lastMouseSim = sim;
+  el('sb').textContent = `(${fmtSci(sim.x/S.distUnit)} ${S.distLabel}, ${fmtSci(sim.y/S.distUnit)} ${S.distLabel}) · dblclick=add · drag=pan · scroll=zoom · click body=select`;
+
+  if (!dragging) return;
+  const dx = e.clientX-dragStart.mx, dy = e.clientY-dragStart.my;
+  dragDist = Math.hypot(dx,dy);
+  if (dragDist > 4) didDrag = true;
+  S.panX = dragStart.px + dx;
+  S.panY = dragStart.py + dy;
+  S.followId = null;
+});
+
+window.addEventListener('mouseup', () => {
+  dragging = false;
+  cv.style.cursor = 'crosshair';
+});
+
+cv.addEventListener('click', e => {
+  if (didDrag) return;
+  const rect = cv.getBoundingClientRect();
+  const mx=e.clientX-rect.left, my=e.clientY-rect.top;
+  // check if clicking on a body
+  for (const b of S.bodies) {
+    const {x:sx,y:sy} = s2c(b.x,b.y);
+    if (Math.hypot(mx-sx,my-sy) <= b.radius+5) {
+      selectBody(b.id); return;
+    }
+  }
+  // deselect if clicked empty space
+  if (S.selectedId) { selectBody(null); return; }
+});
+
+cv.addEventListener('dblclick', e => {
+  if (didDrag) return;
+  const rect = cv.getBoundingClientRect();
+  const mx=e.clientX-rect.left, my=e.clientY-rect.top;
+  const sim = c2s(mx,my);
+  openModal(null, sim);
+});
+
+cv.addEventListener('contextmenu', e => e.preventDefault());
+
+cv.addEventListener('wheel', e => {
+  e.preventDefault();
+  const f = e.deltaY < 0 ? 1.12 : 0.893;
+  const rect = cv.getBoundingClientRect();
+  const cx = e.clientX-rect.left, cy = e.clientY-rect.top;
+  S.panX = cx + (S.panX-cx)*f;
+  S.panY = cy + (S.panY-cy)*f;
+  S.zoom *= f;
+  updateZoomDisplay();
+}, {passive:false});
+
+function zoomBy(f) { S.zoom*=f; updateZoomDisplay(); }
+
+// ═══════════════════════════════════════
+// CONTROL WIRING
+// ═══════════════════════════════════════
+el('bplay').addEventListener('click',()=>{
+  S.running=!S.running;
+  el('bplay').textContent=S.running?'⏸':'▶';
+});
+el('bback').addEventListener('click',()=>{
+  stepVerlet(-S.dt); ensureTrails(); recordTrail();
+});
+el('bfwd').addEventListener('click',()=>{
+  stepVerlet(S.dt); ensureTrails(); recordTrail();
+});
+el('breset').addEventListener('click',()=>{
+  S.simTime=0; S.E0=null; S.running=false; el('bplay').textContent='▶';
+  clearTrails(); updateMetrics();
+});
+el('brev').addEventListener('click',()=>{
+  S.reverse=!S.reverse;
+  el('brev').style.color=S.reverse?'var(--err)':'';
+  el('brev').style.borderColor=S.reverse?'rgba(232,48,32,.4)':'';
+});
+
+el('spd-sl').addEventListener('input',e=>{
+  S.stepsLog=+e.target.value; frameAcc=0; updateSpeedDisplay();
+});
+el('dt-val').addEventListener('input', syncDt);
+el('dt-unit').addEventListener('change', syncDt);
+function syncDt(){
+  const v=+el('dt-val').value||1, u=+el('dt-unit').value;
+  S.dt=v*u;
+}
+
+el('eps').addEventListener('input',e=>{
+  const v=parseFloat(e.target.value);
+  S.eps = isNaN(v) ? 0 : Math.max(0,v);
+});
+el('g-val').addEventListener('input',e=>{ S.G=parseFloat(e.target.value)||G0; });
+
+el('zoom-sl').addEventListener('input',e=>{ S.zoom=Math.pow(2,+e.target.value); updateZoomDisplay(); });
+
+el('btn-center').addEventListener('click',()=>{
+  const c=com(); S.panX=-c.x*S.zoom; S.panY=c.y*S.zoom; S.followId=null;
+});
+el('btn-fit').addEventListener('click', fitAll);
+el('btn-follow').addEventListener('click',()=>{
+  S.followId = S.selectedId||null;
+  if (!S.followId) showBanner('Select a body first, then click Follow');
+});
+el('btn-clear-trails').addEventListener('click', clearTrails);
+el('btn-add').addEventListener('click',()=>openModal(null));
+el('btn-clr').addEventListener('click',()=>{
+  if (!confirm('Remove all bodies?')) return;
+  S.bodies=[]; trails={}; S.selectedId=null; S.followId=null; S.E0=null; rebuildList();
+});
+
+el('ck-trails').addEventListener('change',e=>{ S.showTrails=e.target.checked; });
+el('tlen-sl').addEventListener('input',e=>{ S.trailLen=+e.target.value; el('tlen-val').textContent=S.trailLen; clearTrails(); });
+el('ck-vel').addEventListener('change',e=>{ S.showVel=e.target.checked; });
+el('ck-acc').addEventListener('change',e=>{ S.showAcc=e.target.checked; });
+el('ck-stars').addEventListener('change',e=>{ S.showStars=e.target.checked; });
+el('ck-glow').addEventListener('change',e=>{ S.showGlow=e.target.checked; });
+el('ck-labels').addEventListener('change',e=>{ S.showLabels=e.target.checked; });
+el('ck-grid').addEventListener('change',e=>{ S.showGrid=e.target.checked; });
+
+el('du').addEventListener('change',e=>{
+  S.distUnit=+e.target.value;
+  S.distLabel=e.target.options[e.target.selectedIndex].text;
+  rebuildList();
+});
+el('mu').addEventListener('change',e=>{
+  S.massUnit=+e.target.value;
+  const t=e.target.options[e.target.selectedIndex].text;
+  S.massLabel=t.includes('☉')?'M☉':t.includes('⊕')?'M⊕':'kg';
+  rebuildList();
+});
+
+// Modal buttons
+el('bm-cancel').addEventListener('click', closeModal);
+el('bm-save').addEventListener('click', saveModal);
+el('bm-del').addEventListener('click',()=>{ if(editId)delBody(editId); closeModal(); });
+
+// ═══════════════════════════════════════
+// FIT ALL / CENTER
+// ═══════════════════════════════════════
+function fitAll() {
+  if (!S.bodies.length) return;
+  let mnX=Infinity,mxX=-Infinity,mnY=Infinity,mxY=-Infinity;
+  for (const b of S.bodies) {
+    mnX=Math.min(mnX,b.x); mxX=Math.max(mxX,b.x);
+    mnY=Math.min(mnY,b.y); mxY=Math.max(mxY,b.y);
+  }
+  const dx=mxX-mnX||1, dy=mxY-mnY||1;
+  S.zoom = Math.min(cv.width/dx, cv.height/dy)*0.7;
+  S.panX = -(mnX+mxX)/2*S.zoom;
+  S.panY =  (mnY+mxY)/2*S.zoom;
+  S.followId=null;
+  updateZoomDisplay();
+}
+
+// ═══════════════════════════════════════
+// SECTION TOGGLE
+// ═══════════════════════════════════════
+function toggleSec(h) {
+  h.classList.toggle('open');
+  h.nextElementSibling.classList.toggle('closed');
+}
+
+// ═══════════════════════════════════════
+// IMPORT / EXPORT
+// ═══════════════════════════════════════
+function serialize() {
+  return {
+    version:'1.1',
+    scale:{distUnit:S.distUnit,distLabel:S.distLabel,massUnit:S.massUnit,massLabel:S.massLabel,G:S.G},
+    simulation:{dt:S.dt,stepsLog:S.stepsLog,eps:S.eps,currentTime:S.simTime},
+    view:{zoom:S.zoom,panX:S.panX,panY:S.panY,showTrails:S.showTrails,trailLen:S.trailLen},
+    bodies:S.bodies.map(b=>({name:b.name,mass:b.mass,x:b.x,y:b.y,vx:b.vx,vy:b.vy,color:b.color,radius:b.radius})),
+  };
+}
+function deserialize(o) {
+  S.bodies=[]; trails={}; nextId=1; S.E0=null;
+  if (o.simulation){S.dt=o.simulation.dt||S.dt; S.stepsLog=o.simulation.stepsLog||0; S.eps=o.simulation.eps??1e9; S.simTime=o.simulation.currentTime||0;}
+  if (o.view){S.zoom=o.view.zoom||S.zoom; S.panX=o.view.panX||0; S.panY=o.view.panY||0; S.showTrails=o.view.showTrails!==false; S.trailLen=o.view.trailLen||500;}
+  if (o.scale){S.G=o.scale.G||G0;}
+  for (const b of (o.bodies||[])) {
+    S.bodies.push({...mkBody(b), mass:b.mass, x:b.x, y:b.y, vx:b.vx, vy:b.vy});
+    trails[S.bodies[S.bodies.length-1].id]={pts:[],head:0,full:false};
+  }
+  rebuildList(); updateZoomDisplay(); updateMetrics();
+}
+
+el('btn-exp').addEventListener('click',()=>{
+  el('exp-ta').value=JSON.stringify(serialize(),null,2);
+  el('exp-modal').classList.remove('hidden');
+});
+el('exp-close').addEventListener('click',()=>el('exp-modal').classList.add('hidden'));
+el('exp-copy').addEventListener('click',()=>{
+  navigator.clipboard.writeText(el('exp-ta').value).catch(()=>{});
+  el('exp-copy').textContent='Copied!';
+  setTimeout(()=>el('exp-copy').textContent='Copy',1500);
+});
+el('btn-imp').addEventListener('click',()=>{ el('imp-ta').value=''; el('imp-err').style.display='none'; el('imp-modal').classList.remove('hidden'); });
+el('imp-cancel').addEventListener('click',()=>el('imp-modal').classList.add('hidden'));
+el('imp-ok').addEventListener('click',()=>{
+  try {
+    const o=JSON.parse(el('imp-ta').value);
+    if (!o.bodies) throw new Error('Missing bodies array');
+    deserialize(o);
+    el('imp-modal').classList.add('hidden');
+  } catch(e) {
+    el('imp-err').textContent='Error: '+e.message;
+    el('imp-err').style.display='';
+  }
+});
+el('btn-sav').addEventListener('click',()=>{
+  localStorage.setItem('nbody-save',JSON.stringify(serialize()));
+  el('btn-sav').textContent='✔ Saved';
+  setTimeout(()=>el('btn-sav').textContent='⬡ Save',1500);
+});
+
+// ═══════════════════════════════════════
+// PRESETS
+// ═══════════════════════════════════════
+function loadPreset(name) {
+  S.running=false; el('bplay').textContent='▶';
+  S.bodies=[]; trails={}; nextId=1; S.simTime=0; S.E0=null;
+  S.panX=0; S.panY=0; S.selectedId=null; S.followId=null;
+
+  if (name==='solar') {
+    // Real orbital velocities from vis-viva + JPL data
+    const pl=[
+      {name:'Sun',     mass:1.989e30, x:0,         y:0,         vx:0,      vy:0,      color:'#FDB813',r:14},
+      {name:'Mercury', mass:3.301e23, x:.387*AU,   y:0,         vx:0,      vy:47870,  color:'#a09080',r:3},
+      {name:'Venus',   mass:4.868e24, x:.723*AU,   y:0,         vx:0,      vy:35020,  color:'#e8c57d',r:5},
+      {name:'Earth',   mass:5.972e24, x:1.0*AU,    y:0,         vx:0,      vy:29780,  color:'#4488cc',r:5},
+      {name:'Mars',    mass:6.417e23, x:1.524*AU,  y:0,         vx:0,      vy:24070,  color:'#c1440e',r:4},
+      {name:'Jupiter', mass:1.898e27, x:5.203*AU,  y:0,         vx:0,      vy:13070,  color:'#c8883a',r:10},
+      {name:'Saturn',  mass:5.683e26, x:9.537*AU,  y:0,         vx:0,      vy:9690,   color:'#e4d191',r:9},
+      {name:'Uranus',  mass:8.681e25, x:19.19*AU,  y:0,         vx:0,      vy:6800,   color:'#7de8e8',r:7},
+      {name:'Neptune', mass:1.024e26, x:30.07*AU,  y:0,         vx:0,      vy:5430,   color:'#5b7fde',r:7},
+    ];
+    for (const p of pl) addBody({...p, radius:p.r});
+    S.G=G0; S.eps=1e9;
+    setDt(1,'86400');    // 1 day
+    S.stepsLog=2;        // 100 steps/frame
+    el('spd-sl').value=2;
+    showPI('Solar System · dt=1day · 100 steps/frame ≈ ~164 yr/s · Press Space to start');
+
+  } else if (name==='binary') {
+    // Two equal mass stars in circular orbit
+    // v_circ = sqrt(G·M/(4·sep))  — from centripetal balance at sep from CoM
+    const sep=5e10, v=Math.sqrt(G0*MS/(4*sep));
+    addBody({name:'Star-A',mass:MS, x:-sep,y:0, vx:0,vy:-v, color:'#FDB813',radius:12});
+    addBody({name:'Star-B',mass:MS, x: sep,y:0, vx:0,vy: v, color:'#ff8040',radius:12});
+    S.G=G0; S.eps=1e8;
+    setDt(10,'3600');    // 10 hours
+    S.stepsLog=1; el('spd-sl').value=1;
+    showPI('Equal binary star · circular orbit · orbital period ≈ 5.6 hours');
+
+  } else if (name==='figure8') {
+    // Chenciner–Montgomery choreography (2000)
+    // Normalized: G=1, m=1. Scale to SI: L=1e11m, M=1e30kg
+    // V_scale = sqrt(G·M/L) = sqrt(6.674e-11·1e30/1e11) ≈ 25834 m/s
+    // T_scale = L/V ≈ 3.870e6 s, Period = 6.3259·T ≈ 2.448e7 s ≈ 283 days
+    const L=1e11, M=1e30;
+    const V=Math.sqrt(G0*M/L);  // ≈ 25834 m/s
+    addBody({name:'A',mass:M, x:-0.97000436*L, y: 0.24308753*L, vx: 0.46620369*V, vy: 0.43236573*V, color:'#e83020',radius:8});
+    addBody({name:'B',mass:M, x: 0.97000436*L, y:-0.24308753*L, vx: 0.46620369*V, vy: 0.43236573*V, color:'#10cce8',radius:8});
+    addBody({name:'C',mass:M, x: 0,            y: 0,            vx:-0.93240737*V, vy:-0.86473146*V, color:'#10e87a',radius:8});
+    S.G=G0; S.eps=0;  // ε=0 required for stable choreography
+    el('eps').value=0;
+    setDt(200,'1');      // 200 s
+    S.stepsLog=1; el('spd-sl').value=1;
+    showPI('Figure-8 choreography · ε=0 required · period ≈ 283 days · needs ≈ 122000 steps/period');
+
+  } else if (name==='lagrange') {
+    // Sun + Earth + L4 + L5 trojans
+    const r=AU;
+    const v=Math.sqrt(G0*MS/r);  // Earth's circular orbit speed
+    addBody({name:'Sun',  mass:MS,      x:0,                      y:0,                      vx:0,                   vy:0,                  color:'#FDB813',radius:14});
+    addBody({name:'Earth',mass:ME,      x:r,                      y:0,                      vx:0,                   vy:v,                  color:'#4488cc',radius:5});
+    // L4 at +60° — same angular velocity, same orbital radius
+    addBody({name:'L4',   mass:ME*0.01, x:r*Math.cos(Math.PI/3), y:r*Math.sin(Math.PI/3),  vx:-v*Math.sin(Math.PI/3), vy:v*Math.cos(Math.PI/3), color:'#e07818',radius:4});
+    addBody({name:'L5',   mass:ME*0.01, x:r*Math.cos(-Math.PI/3),y:r*Math.sin(-Math.PI/3), vx:-v*Math.sin(-Math.PI/3),vy:v*Math.cos(-Math.PI/3), color:'#e8a818',radius:4});
+    S.G=G0; S.eps=1e9;
+    setDt(1,'86400');
+    S.stepsLog=1.5; el('spd-sl').value=1.5;
+    showPI('Sun-Earth-Lagrange system · L4/L5 are gravitationally stable · trojans librate around those points');
+
+  } else if (name==='galaxy') {
+    // Two toy galaxies on collision course
+    // Galaxy scale: ~3×10²⁰m radius, central BH ~10⁴⁰ kg, stars ~10³⁰ kg
+    const galR=3e20, sep=8e20, approach=1.5e4;
+    const centralM=1e40;
+    S.G=G0; S.eps=1e18;
+    for (let g=0; g<2; g++) {
+      const cx = g===0 ? -sep/2 : sep/2;
+      const vcx= g===0 ?  approach : -approach;
+      addBody({name:`BH${g+1}`, mass:centralM, x:cx,y:0, vx:vcx,vy:0, color:g===0?'#fff':'#ffaaaa',radius:10});
+      for (let i=0; i<35; i++) {
+        const ang=Math.random()*Math.PI*2;
+        const rad=(0.08+Math.random()*0.92)*galR;
+        const sx=cx+rad*Math.cos(ang), sy=rad*Math.sin(ang);
+        const ov=Math.sqrt(G0*centralM/rad);
+        const svx=vcx-ov*Math.sin(ang), svy=ov*Math.cos(ang);
+        addBody({name:`S${g+1}-${i+1}`, mass:1e30, x:sx,y:sy, vx:svx,vy:svy, color:g===0?'#e07818':'#10cce8',radius:3});
+      }
+    }
+    setDt(3e12,'1');     // 3×10¹² s ≈ 95 kyr
+    S.stepsLog=1; el('spd-sl').value=1;
+    showPI('Galaxy merge · ε=10¹⁸m · dt≈95kyr · ~10 steps/frame for stability');
+
+  } else if (name==='asteroids') {
+    // Sun + Jupiter + asteroid belt
+    addBody({name:'Sun',    mass:MS,       x:0,          y:0, vx:0,   vy:0,     color:'#FDB813',radius:14});
+    addBody({name:'Jupiter',mass:1.898e27, x:5.203*AU,   y:0, vx:0,   vy:13070, color:'#c8883a',radius:9});
+    for (let i=0; i<50; i++) {
+      const r=(2.2+Math.random()*1.0)*AU;
+      const ang=Math.random()*Math.PI*2;
+      const v=Math.sqrt(G0*MS/r);
+      addBody({name:`A${i+1}`, mass:1e15, x:r*Math.cos(ang),y:r*Math.sin(ang), vx:-v*Math.sin(ang),vy:v*Math.cos(ang), color:'#708090',radius:2});
+    }
+    S.G=G0; S.eps=1e8;
+    setDt(1,'86400');
+    S.stepsLog=2; el('spd-sl').value=2;
+    showPI('Sun+Jupiter+50 asteroids · Jupiter clears Kirkwood gaps at resonances over millennia');
+  }
+
+  syncDt(); fitAll(); updateMetrics(); rebuildList();
+}
+
+function setDt(v,u) {
+  el('dt-val').value=v; el('dt-unit').value=u;
+  S.dt=v*+u;
+}
+
+function showPI(msg) {
+  const e=el('preset-info');
+  e.textContent=msg; e.style.display='';
+  setTimeout(()=>e.style.display='none', 7000);
+}
+
+function showBanner(msg) { showPI(msg); }
+
+// ═══════════════════════════════════════
+// KEYBOARD
+// ═══════════════════════════════════════
+document.addEventListener('keydown', e => {
+  const tag=e.target.tagName;
+  if (tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT') return;
+  if (e.code==='Space')  { e.preventDefault(); el('bplay').click(); }
+  if (e.code==='Period') el('bfwd').click();
+  if (e.code==='Comma')  el('bback').click();
+  if (e.code==='KeyF')   fitAll();
+  if (e.code==='KeyC')   el('btn-center').click();
+  if (e.code==='KeyT')   { el('ck-trails').checked=!el('ck-trails').checked; el('ck-trails').dispatchEvent(new Event('change')); }
+  if (e.code==='KeyG')   { el('ck-grid').checked=!el('ck-grid').checked; el('ck-grid').dispatchEvent(new Event('change')); }
+  if (e.code==='KeyV')   { el('ck-vel').checked=!el('ck-vel').checked; el('ck-vel').dispatchEvent(new Event('change')); }
+  if (e.code==='KeyR')   el('brev').click();
+  if (e.code==='Delete') { if (S.selectedId) { delBody(S.selectedId); } }
+  if (e.code==='Escape') { S.selectedId=null; rebuildList(); updateSelectedInfo(); }
+  if (e.code==='BracketRight') { S.stepsLog=Math.min(4,S.stepsLog+.25); el('spd-sl').value=S.stepsLog; }
+  if (e.code==='BracketLeft')  { S.stepsLog=Math.max(-2,S.stepsLog-.25); el('spd-sl').value=S.stepsLog; }
+});
+
+// ═══════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════
+function el(id) { return document.getElementById(id); }
+function fmtSci(n) {
+  if (!isFinite(n)) return '—';
+  if (n===0) return '0';
+  const e=Math.floor(Math.log10(Math.abs(n)));
+  if (Math.abs(e)<4) return parseFloat(n.toPrecision(4)).toString();
+  return n.toExponential(3);
+}
+function escH(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function hexRGB(hex) {
+  // cache for performance
+  if (!hexRGB._c) hexRGB._c={};
+  if (hexRGB._c[hex]) return hexRGB._c[hex];
+  const r=parseInt(hex.slice(1,3),16);
+  const g=parseInt(hex.slice(3,5),16);
+  const b=parseInt(hex.slice(5,7),16);
+  return hexRGB._c[hex]=[r,g,b];
+}
+
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
+function init() {
+  resize();
+  initCPS();
+  syncDt();
+
+  // try restore autosave
+  try {
+    const s=localStorage.getItem('nbody-save');
+    if (s) { const o=JSON.parse(s); if (o.bodies?.length) { deserialize(o); goto_startloop(); return; } }
+  } catch {}
+
+  loadPreset('solar');
+  goto_startloop();
+}
+
+function goto_startloop() {
+  lastTs = performance.now();
+  animId = requestAnimationFrame(loop);
+}
+
+init();
+</script>
+</body>
+</html>
